@@ -231,9 +231,53 @@ For each feature:
 
 ## Phase 4: TDD Implementation
 
-For each feature in dependency order, implement using RED-GREEN-REFACTOR with the pre-derived tests from Phase 3.
+For each feature in dependency order, implement using RED-GREEN-REFACTOR with the pre-derived tests from Phase 3. The TDD cycle runs inline — do NOT delegate to the standalone TDD skill, as doing so loses feature-to-test tracing context.
 
-**For larger scope (multiple features):** Invoke `writing-plans` to produce a detailed implementation plan. The plan receives the pre-derived tests, so each task already has its test skeletons:
+<HARD-GATE>
+Before writing GREEN code for ANY test, you MUST re-read the relevant spec section for that feature. This is not optional. Use NotebookLM, MarkItDown, or direct PDF read — whichever was established in Phase 1. If you cannot confirm the spec says what you think it says, STOP and re-read.
+</HARD-GATE>
+
+### The Cycle: RED → SPEC-CHECK → GREEN → REFACTOR
+
+For each test in the Traceability Matrix, in feature order:
+
+**RED — Write failing test**
+1. Take the next test skeleton from Phase 3 (e.g., F1.T1)
+2. Write the test with concrete assertions — no placeholders
+3. Run it. Confirm it **fails for the right reason** (feature missing, not typo/error)
+4. If it passes immediately: you're testing existing behavior. Fix the test.
+5. If it errors (not fails): fix the error, re-run until it fails correctly.
+
+**SPEC-CHECK — Re-read the spec before implementing**
+1. Re-read the spec section referenced by this feature (from the Feature Registry)
+2. Confirm: does the test match what the spec actually requires?
+3. If the spec says something different from what you assumed: fix the test first, re-run RED
+
+**GREEN — Minimal code to pass**
+1. Write the simplest code that makes the failing test pass
+2. Do NOT add features, configuration, or "improvements" beyond what the test requires
+3. Run the test. Confirm it **passes**.
+4. Run ALL tests. Confirm nothing else broke.
+5. If other tests fail: fix now, not later.
+
+**REFACTOR — Clean up while green**
+1. Remove duplication, improve names, extract helpers — only while all tests stay green
+2. Do NOT add behavior. Do NOT change what the code does. Only change how it's organized.
+3. Re-run all tests after refactoring. Still green? Move to next test.
+
+### Per-Feature Commit
+
+After all tests for a feature pass (F1.T1, F1.T2, ... all green):
+
+```bash
+git commit -m "feat(F1): implement [feature name]"
+```
+
+Update the Feature Registry: status `proposed` → `tested`.
+
+### Planning for Larger Scope
+
+**For larger scope (many features):** Invoke `writing-plans` to produce a detailed implementation plan. The plan receives the pre-derived tests, so each task already has its test skeletons. But the TDD cycle above still runs within each task — writing-plans structures the work, this cycle executes it.
 
 ```markdown
 ### Task N: Feature F1 — [Feature Name]
@@ -243,17 +287,17 @@ For each feature in dependency order, implement using RED-GREEN-REFACTOR with th
 
 - [ ] Step 1: Write test F1.T1 (from Phase 3 skeleton)
 - [ ] Step 2: Run — verify RED
-- [ ] Step 3: Implement minimal code — verify GREEN
-- [ ] Step 4: Write test F1.T2 (from Phase 3 skeleton)
-- [ ] Step 5: Run — verify RED
-- [ ] Step 6: Implement — verify GREEN
-- [ ] Step 7: Refactor
-- [ ] Step 8: Commit "feat(F1): implement [feature name]"
+- [ ] Step 3: Re-read spec §X.Y — confirm test matches spec
+- [ ] Step 4: Implement minimal code — verify GREEN
+- [ ] Step 5: Write test F1.T2 (from Phase 3 skeleton)
+- [ ] Step 6: Run — verify RED
+- [ ] Step 7: Re-read spec §X.Y — confirm test matches spec
+- [ ] Step 8: Implement — verify GREEN
+- [ ] Step 9: Refactor
+- [ ] Step 10: Commit "feat(F1): implement [feature name]"
 ```
 
-**For smaller scope (one or two features):** Invoke TDD directly — follow `superpowers:test-driven-development` with the Phase 3 test skeletons as input.
-
-The terminal state of Phase 4 per feature is: all pre-derived tests pass, code is committed with feature ID reference.
+The terminal state of Phase 4 per feature is: all pre-derived tests pass, spec re-read confirmed for each test, code is committed with feature ID reference.
 
 ## Phase 5: Human Verification
 
@@ -270,16 +314,26 @@ Present each feature for verification:
 
 ## Constantly Consulting the Spec
 
-Throughout ALL phases, repeatedly query the spec — not just in Phase 1:
+<HARD-GATE>
+The spec is NOT a one-time input. You MUST re-read the relevant spec section at each of these mandatory checkpoints:
+1. **Before extracting each feature** — confirm the requirement exists in the spec
+2. **Before deriving tests for a feature** — confirm edge cases and acceptance criteria from the spec
+3. **Before writing GREEN code for each test** — confirm implementation direction matches spec (enforced in Phase 4 SPEC-CHECK step)
+4. **Before presenting a feature for verification** — confirm the implementation matches the spec's stated requirement
+Skipping any of these is a red flag. If you catch yourself saying "I already know what the spec says" — that's rationalization. Re-read it.
+</HARD-GATE>
 
-- **During feature extraction:** "Let me check the spec for section X to confirm this feature's requirements"
-- **During test derivation:** "Let me query the spec about edge cases for this behavior"
-- **During implementation:** "Let me verify this matches the spec's definition of [concept]"
-- **During verification:** "Let me re-read the spec section to confirm the implementation is correct"
+**How to re-read:**
+- If NotebookLM is available, prefer it — source-grounded, citation-backed answers reduce hallucination risk
+- If MarkItDown was used, the markdown version is available for direct re-reading
+- Otherwise, use native PDF read on the specific section/page from the Feature Registry
 
-If NotebookLM is available, prefer it for ongoing spec queries — source-grounded, citation-backed answers reduce hallucination risk. If MarkItDown was used, the markdown version is available for re-reading throughout.
+**What to say when consulting the spec:**
+- "Let me re-read spec §X.Y to confirm this feature's requirements before proceeding"
+- "Checking the spec for edge cases on this behavior before deriving tests"
+- "Re-reading spec §X.Y before implementing — confirming my test matches the requirement"
 
-The spec is not a one-time input. It is a living reference consulted at every decision point.
+The spec is a living reference consulted at every decision point, not a Phase 1 artifact.
 
 ## Common Rationalizations
 
@@ -319,8 +373,10 @@ The spec is not a one-time input. It is a living reference consulted at every de
 - `superpowers:brainstorming` — after producing a design, can transition to STDD for spec-driven test derivation
 
 **Downstream (STDD invokes):**
-- `superpowers:writing-plans` — Phase 4 output; receives pre-derived tests. writing-plans then offers subagent-driven-development or executing-plans as normal.
-- `superpowers:test-driven-development` — Phase 4 for smaller scope; subagents follow RED-GREEN-REFACTOR with pre-derived test skeletons.
+- `superpowers:writing-plans` — Phase 4 for larger scope; receives pre-derived tests. writing-plans then offers subagent-driven-development or executing-plans as normal. The TDD cycle (RED → SPEC-CHECK → GREEN → REFACTOR) still runs inline within each task.
+
+**Not invoked (by design):**
+- `superpowers:test-driven-development` — STDD embeds its own TDD cycle with spec-check gates. Delegating to standalone TDD would lose feature-to-test tracing context. Use standalone TDD only for non-spec work (bug fixes, features without specs).
 
 **Complementary:**
 - `superpowers:verification-before-completion` — verify all spec-derived tests pass before claiming done

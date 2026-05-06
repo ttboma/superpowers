@@ -151,6 +151,48 @@ already use it in another harness.
   copilot plugin install superpowers@superpowers-marketplace
   ```
 
+## Workflow Paths
+
+Choose the path that matches your situation. Each path is a sequence of skills you invoke (or that auto-trigger).
+
+### Path A: Full Spec-Driven (recommended when you have spec documents)
+
+```
+/brainstorming → /spec-test-driven-development → /verification-before-completion → /finishing-a-development-branch
+```
+
+`/spec-test-driven-development` runs all phases internally:
+
+| Phase | What happens | Gate |
+|-------|-------------|------|
+| 1. Read Specs | Query specs via NotebookLM / MarkItDown / PDF read | Can explain spec in own words |
+| 2. Extract Features | Build Feature Registry with spec references | Human approves feature list |
+| 3. Map Tests | Derive test cases per feature, build Traceability Matrix | Human approves test mapping |
+| 4. TDD per Feature | RED → SPEC-CHECK → GREEN → REFACTOR per test | All tests pass per feature |
+| 5. Verify | Human verifies each feature against spec | All features verified |
+
+### Path B: Lightweight (no spec documents)
+
+Pick the phases you need:
+
+```
+/brainstorming → /writing-plans → /test-driven-development → /verification-before-completion → /finishing-a-development-branch
+```
+
+| Step | Skill | When to skip |
+|------|-------|-------------|
+| 1. Design | `/brainstorming` | Never — even simple projects need a design |
+| 2. Plan | `/writing-plans` | Single-feature work or bug fix |
+| 3. TDD | `/test-driven-development` | Never — no production code without failing test |
+| 4. Verify | `/verification-before-completion` | Never |
+| 5. Finish | `/finishing-a-development-branch` | When working on main directly |
+
+### Path C: Bug Fix (minimal)
+
+```
+/systematic-debugging → /test-driven-development → /verification-before-completion
+```
+
 ## The Basic Workflow
 
 1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
@@ -163,9 +205,11 @@ already use it in another harness.
 
 5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
 
-6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+6. **spec-test-driven-development** - Activates when project has spec documents (PDFs, reference docs). Extracts features from specs, derives tests per feature, then runs TDD with spec-check gates inline. Does not delegate to standalone TDD — keeps feature-to-test tracing throughout.
 
-7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+7. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+
+8. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
 
 **The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
@@ -174,7 +218,8 @@ already use it in another harness.
 ### Skills Library
 
 **Testing**
-- **test-driven-development** - RED-GREEN-REFACTOR cycle (includes testing anti-patterns reference)
+- **test-driven-development** - RED-GREEN-REFACTOR cycle for non-spec work (includes testing anti-patterns reference)
+- **spec-test-driven-development** - Full spec-driven workflow: read specs → extract features → map tests → TDD with inline spec-check gates
 
 **Debugging**
 - **systematic-debugging** - 4-phase root cause process (includes root-cause-tracing, defense-in-depth, condition-based-waiting techniques)
