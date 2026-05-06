@@ -69,8 +69,8 @@ You MUST create a task for each of these items and complete them in order:
 5. **Map features to tests** — each feature → multiple test cases with acceptance criteria
 6. **Human partner approves test mapping** — verify tests cover all spec requirements per feature
 7. **Save feature-test document** — commit to `docs/superpowers/specs/YYYY-MM-DD-<project>-features.md` (user preferences for location override this default)
-8. **Begin TDD per feature** — invoke writing-plans with pre-derived tests, or invoke TDD directly
-9. **Human partner verifies each feature** — confirm implementation matches spec
+8. **Begin TDD per feature** — RED → SPEC-CHECK → GREEN → REFACTOR per test, inline
+9. **Iterative review per feature** — human walks through each feature: verify, add tests, fix tests, adjust features, query spec
 
 ## Process Flow
 
@@ -122,19 +122,32 @@ digraph stdd {
     }
 
     subgraph cluster_p5 {
-        label="Phase 5: Verification";
+        label="Phase 5: Iterative Review";
         style=rounded;
-        human_verify [label="Human partner verifies\nfeature against spec" shape=diamond];
-        done [label="Feature verified" shape=box style=filled fillcolor="#ccffcc"];
+        present_feature [label="Present feature\nwith tests" shape=box];
+        human_action [label="Human action?" shape=diamond];
+        verified [label="Feature verified" shape=box style=filled fillcolor="#ccffcc"];
+        fix_tests [label="Fix/add tests\nRED → SPEC-CHECK → GREEN" shape=box];
+        adjust_feature [label="Re-read spec\nadjust feature + tests" shape=box];
+        query_spec [label="Query spec\npresent answer" shape=box];
+        add_feature [label="Go to Phase 2\nextract new feature" shape=box];
 
-        human_verify -> done [label="matches spec"];
+        present_feature -> human_action;
+        human_action -> verified [label="verified"];
+        human_action -> fix_tests [label="fix/add test"];
+        human_action -> adjust_feature [label="adjust feature"];
+        human_action -> query_spec [label="query spec"];
+        human_action -> add_feature [label="add feature"];
+        fix_tests -> present_feature;
+        adjust_feature -> present_feature;
+        query_spec -> present_feature;
     }
 
     can_explain -> extract [label="yes"];
     human_approve_features -> derive_tests [label="approved"];
     human_approve_tests -> write_plan [label="approved"];
-    tdd_cycle -> human_verify;
-    human_verify -> tdd_cycle [label="needs revision"];
+    tdd_cycle -> present_feature;
+    add_feature -> extract;
 }
 ```
 
@@ -299,18 +312,36 @@ Update the Feature Registry: status `proposed` → `tested`.
 
 The terminal state of Phase 4 per feature is: all pre-derived tests pass, spec re-read confirmed for each test, code is committed with feature ID reference.
 
-## Phase 5: Human Verification
+## Phase 5: Iterative Review
 
-After each feature is implemented, your human partner verifies it against the spec.
+A human-driven review loop. Walk through features one by one with the spec open. This phase can be long — that's expected. Do not rush it.
 
-Present each feature for verification:
+**For each feature, present:**
 
-> "Feature F1 ([name]) is implemented. All [N] tests pass. The spec requires [brief summary of spec requirement]. Please verify this matches the spec and mark it as verified or needs-revision."
+> "Feature F1 ([name]).
+> Spec ref: §X.Y.
+> Tests: F1.T1 [one-line summary], F1.T2 [one-line summary], F1.T3 [one-line summary].
+> What would you like to do?"
 
-- **verified** → Update feature status to `verified` in the registry
-- **needs-revision** → Go back to Phase 4 with specific feedback. Do NOT re-derive tests unless the spec interpretation was wrong.
+**Human actions — classify by intent, not exact phrasing:**
 
-**Final gate:** All features in the registry are `verified`. Only then is the project complete.
+Your human partner will not use these exact words. Classify what they say by whether it's about the **spec**, **features**, or **tests**, then loop back to the appropriate phase.
+
+| Human intent | Loops back to | Then continues through | Returns to Phase 5 |
+|-------------|--------------|----------------------|---------------------|
+| Anything about the **spec** — query, clarify, re-read, "what does the spec say about...", "check section X", "I think the spec means..." | Phase 1 (re-read spec) | — | Resume at current feature |
+| Anything about **features** — add, split, adjust, remove, rename, "this feature should...", "we're missing a feature for...", "this doesn't belong here" | Phase 2 (extract/modify registry) | → Phase 3 (map tests) → Phase 4 (TDD) | Re-present affected feature(s) |
+| Anything about **tests** — add, fix, rewrite, remove, "this test is wrong", "need more coverage", "test doesn't match spec", "add edge case for..." | Phase 3 (re-derive/fix tests) | → Phase 4 (RED → SPEC-CHECK → GREEN) | Re-present current feature |
+| Approve — "verified", "looks good", "next", thumbs up | — | — | Next feature |
+
+**Rules:**
+- After ANY change (test fix, new test, feature adjustment), re-run ALL tests before re-presenting the feature
+- When human says a test is wrong, re-read the spec section FIRST — the human's understanding of the spec takes priority over yours
+- When adding tests, follow the same RED → SPEC-CHECK → GREEN cycle from Phase 4 — no shortcuts
+- When adjusting a feature, update the Feature Registry BEFORE changing code
+- Spec queries do not count as "done reviewing" — after answering, return to the current feature
+
+**Loop continues until all features in the registry are `verified`. No feature is complete until the human says so.**
 
 ## Constantly Consulting the Spec
 

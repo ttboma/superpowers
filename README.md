@@ -169,7 +169,16 @@ Choose the path that matches your situation. Each path is a sequence of skills y
 | 2. Extract Features | Build Feature Registry with spec references | Human approves feature list |
 | 3. Map Tests | Derive test cases per feature, build Traceability Matrix | Human approves test mapping |
 | 4. TDD per Feature | RED → SPEC-CHECK → GREEN → REFACTOR per test | All tests pass per feature |
-| 5. Verify | Human verifies each feature against spec | All features verified |
+| 5. Iterative Review | Walk through each feature with spec open | All features verified |
+
+Phase 5 is not a final gate — it loops back:
+
+| Human intent | Loops back to | Then continues from there |
+|------------|--------------|--------------------------|
+| Anything about the **spec** (query, clarify, re-read, "what does the spec say about...") | Phase 1 (re-read spec) | Resume Phase 5 |
+| Anything about **features** (add, split, adjust, remove, "this feature should...") | Phase 2 (extract/modify) → 3 → 4 | Resume Phase 5 |
+| Anything about **tests** (add, fix, rewrite, "this test is wrong", "need more coverage") | Phase 3 (re-map) → 4 (TDD) | Resume Phase 5 |
+| Approve current feature | — | Next feature in Phase 5 |
 
 ### Path B: Lightweight (no spec documents)
 
