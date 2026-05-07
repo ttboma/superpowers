@@ -34,6 +34,8 @@ Installation differs by harness. If you use more than one, install Superpowers s
 
 ### Claude Code
 
+#### Installing from this fork
+
 - Register the marketplace:
 
   ```bash
@@ -43,8 +45,26 @@ Installation differs by harness. If you use more than one, install Superpowers s
 - Install the plugin:
 
   ```bash
-  /plugin install superpowers@superpowers-dev
+  /plugin install superpowers@ttboma-superpowers
   ```
+
+Or manually add the following to your `~/.claude/settings.json`:
+
+```json
+{
+  "enabledPlugins": {
+    "superpowers@ttboma-superpowers": true
+  },
+  "extraKnownMarketplaces": {
+    "ttboma-superpowers": {
+      "source": {
+        "source": "github",
+        "repo": "ttboma/superpowers"
+      }
+    }
+  }
+}
+```
 
 ### Codex CLI
 
